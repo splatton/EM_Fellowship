@@ -102,7 +102,6 @@ ui <- fluidPage(theme = shinytheme("yeti"),
 server <- function(input, output, session) {
     
     v <- reactiveValues()
-    v$full <- temp_frame
     
     observeEvent(input$resident_entry, {
         if(input$resident_entry != '--') {
