@@ -7,6 +7,11 @@ library(ggplot2)
 
 #This application collects data on EM fellowships and produces an analysis
 
+sheets_auth(
+    cache = ".secrets",
+    email = "spltt.tlb@gmail.com"
+)
+
 # Define UI for application
 ui <- fluidPage(theme = shinytheme("yeti"),
                 
@@ -107,6 +112,10 @@ ui <- fluidPage(theme = shinytheme("yeti"),
                             wellPanel(
                                 helpText("Thanks for completing this survey! Please tell your friends - the more data we have, the better for all of us.")
                             ))
+                    ),
+                    shinyjs::hidden(
+                        div(id = "results",
+                            helpText("Results will display here when sufficient data has been collected."))
                     )
                 )
 )
@@ -115,7 +124,7 @@ ui <- fluidPage(theme = shinytheme("yeti"),
 server <- function(input, output, session) {
     
     v <- reactiveValues()
-    v$new <- data.frame(Time = NA, FShip.Current = NA, FShip.Ever = NA, FShip.Type = NA, FShip.Length = NA, FShip.Salary = NA, FShip.Hours = NA, FShip.Vaca = NA, Gender = NA, Age = NA, Married = NA, Kids = NA, State = NA, Since.Res = NA, Til.Retirement = NA, Emp.Model = NA, Admin = NA, Local.Power = NA, EM.Power = NA, Hourly = NA, Yearly.Hours = NA, If.Fired.Weeks = NA, Net.Worth = NA)
+    v$new <- data.frame(Time = NA, FShip.Current = NA, FShip.Ever = NA, FShip.Type = NA, FShip.Length = NA, FShip.Salary = NA, FShip.Hours = NA, FShip.Vaca = NA, Gender = NA, Age = NA, Married = NA, Kids = NA, State = NA, Zip = NA, Since.Res = NA, Til.Retirement = NA, Emp.Model = NA, Admin = NA, Local.Power = NA, EM.Power = NA, You.Fired = NA, Other.Fired = NA, Hourly = NA, Yearly.Hours = NA, If.Fired.Weeks = NA, Net.Worth = NA)
     
     #The following code all reflects the survey flow.
     
@@ -126,7 +135,9 @@ server <- function(input, output, session) {
         if(input$resident_entry == 'Yes') {
             shinyjs::toggle(id = "fship_now", anim = TRUE)
         }
-        #Will need an if statement here that displays the overall output for residents.
+        if(input$resident_entry == 'No') {
+            shinyjs::show(id = "results", anim = TRUE)
+        }
     })
     
     observeEvent(input$fship_entry, {
@@ -198,6 +209,7 @@ server <- function(input, output, session) {
         shinyjs::hide(id = "fship_type", anim = FALSE)
         shinyjs::hide(id = "full_pay", anim = FALSE)
         shinyjs::show(id = "thanks", anim = TRUE)
+        shinyjs::show(id = "results", anim = TRUE)
         v$new[1,'Time'] <- Sys.time()
         v$new[1,'FShip.Current'] <- input$fship_entry
         if(input$fship_entry == 'Yes') {
@@ -229,6 +241,7 @@ server <- function(input, output, session) {
         v$new[1,'Married'] <- input$married
         v$new[1,'Kids'] <- input$kids
         v$new[1,'State'] <- input$state
+        v$new[1,'Zip'] <- input$zip_code
         v$new[1,'Since.Res'] <- input$since_res
         v$new[1,'Til.Retirement'] <- input$til_death
         
@@ -239,6 +252,8 @@ server <- function(input, output, session) {
             v$new[1,'Admin'] <- input$admin
             v$new[1,'Local.Power'] <- input$local_power
             v$new[1,'EM.Power'] <- input$em_power
+            v$new[1,'You.Fired'] <- input$you_fired
+            v$new[1,'Other.Fired'] <- input$other_fired
             v$new[1,'If.Fired.Weeks'] <- input$if_fired
             v$new[1,'Net.Worth'] <- input$net_worth
             if(input$pay_type == 'Salary') {
@@ -252,6 +267,8 @@ server <- function(input, output, session) {
         }
         
         #Next we will enter this into the database.
+
+        sheet_append("https://docs.google.com/spreadsheets/d/1-QgPah52rtgiwCXEtlA3JDFFeQZZXKyt373k404juTc/edit#gid=0", v$new[1,])
         
     })
 
