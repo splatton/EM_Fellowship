@@ -58,7 +58,7 @@ ui <- fluidPage(theme = shinytheme("yeti"),
                             inputPanel(
                                 verticalLayout(
                                     div(id = "everybody_qs",
-                                        selectInput("sex", "Gender:", choices = c('Female', 'Male', 'Other')),
+                                        selectInput("gender", "Gender:", choices = c('Female', 'Male', 'Other')),
                                         numericInput("age", "Your current age:", value = NULL),
                                         selectInput("married", "Are you currently married?", choices = c('Yes', 'No')),
                                         selectInput("kids", "Do you have any children?", choices = c('Yes', 'No')),
