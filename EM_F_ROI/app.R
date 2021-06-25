@@ -101,6 +101,12 @@ ui <- fluidPage(theme = shinytheme("yeti"),
                         div(id = "submit",
                             actionButton("submit_entry", "SUBMIT")
                             )
+                    ),
+                    shinyjs::hidden(
+                        div(id = "thanks",
+                            wellPanel(
+                                helpText("Thanks for completing this survey! Please tell your friends - the more data we have, the better for all of us.")
+                            ))
                     )
                 )
 )
@@ -109,6 +115,9 @@ ui <- fluidPage(theme = shinytheme("yeti"),
 server <- function(input, output, session) {
     
     v <- reactiveValues()
+    v$new <- data.frame(Time = NA, FShip.Current = NA, FShip.Ever = NA, FShip.Type = NA, FShip.Length = NA, FShip.Salary = NA, FShip.Hours = NA, FShip.Vaca = NA, Gender = NA, Age = NA, Married = NA, Kids = NA, State = NA, Since.Res = NA, Til.Retirement = NA, Emp.Model = NA, Admin = NA, Local.Power = NA, EM.Power = NA, Hourly = NA, Yearly.Hours = NA, If.Fired.Weeks = NA, Net.Worth = NA)
+    
+    #The following code all reflects the survey flow.
     
     observeEvent(input$resident_entry, {
         if(input$resident_entry != '--') {
@@ -180,6 +189,70 @@ server <- function(input, output, session) {
             shinyjs::hide(id = "by_salary", anim = FALSE)
             shinyjs::show(id = "by_hourly", anim = TRUE)
         }
+    })
+    
+    #The following code now reflects the entry of the data into the database. This will all happen when the 'Submit' button is hit.
+    
+    observeEvent(input$submit_entry, {
+        shinyjs::toggle(id = "submit", anim = FALSE)
+        shinyjs::hide(id = "fship_type", anim = FALSE)
+        shinyjs::hide(id = "full_pay", anim = FALSE)
+        shinyjs::show(id = "thanks", anim = TRUE)
+        v$new[1,'Time'] <- Sys.time()
+        v$new[1,'FShip.Current'] <- input$fship_entry
+        if(input$fship_entry == 'Yes') {
+            v$new[1,'FShip.Ever'] <- input$fship_entry
+        }
+        else {
+            v$new[1,'FShip.Ever'] <- input$fship_ever_entry
+        }
+        
+        #These next entries are only for fellows
+        
+        if(input$fship_entry == 'Yes' | input$fship_ever_entry == 'Yes') {
+            if(input$fship_type_entry == 'Other') {
+                v$new[1,'FShip.Type'] <- input$fship_other_entry
+            }
+            else {
+                v$new[1,'FShip.Type'] <- input$fship_type_entry
+            }
+            v$new[1,'FShip.Length'] <- input$fship_length_entry
+            v$new[1,'FShip.Salary'] <- input$fship_salary
+            v$new[1,'FShip.Hours'] <- input$fship_hours
+            v$new[1,'FShip.Vaca'] <- input$fship_vaca
+        }
+        
+        #These next entries are for all comers.
+        
+        v$new[1,'Gender'] <- input$gender
+        v$new[1,'Age'] <- input$age
+        v$new[1,'Married'] <- input$married
+        v$new[1,'Kids'] <- input$kids
+        v$new[1,'State'] <- input$state
+        v$new[1,'Since.Res'] <- input$since_res
+        v$new[1,'Til.Retirement'] <- input$til_death
+        
+        #These next entries are only for non-fellows
+        
+        if(input$fship_entry == 'No') {
+            v$new[1,'Emp.Model'] <- input$emp_type
+            v$new[1,'Admin'] <- input$admin
+            v$new[1,'Local.Power'] <- input$local_power
+            v$new[1,'EM.Power'] <- input$em_power
+            v$new[1,'If.Fired.Weeks'] <- input$if_fired
+            v$new[1,'Net.Worth'] <- input$net_worth
+            if(input$pay_type == 'Salary') {
+                v$new[1,'Hourly'] <- input$salary_entry/(input$salary_hours*(52-input$salary_vaca))
+                v$new[1,'Yearly.Hours'] <- input$salary_hours*(52-input$salary_vaca)
+            }
+            else {
+                v$new[1,'Hourly'] <- input$hourly_entry
+                v$new[1,'Yearly.Hours'] <- 12*input$hourly_monthly
+            }
+        }
+        
+        #Next we will enter this into the database.
+        
     })
 
 }
